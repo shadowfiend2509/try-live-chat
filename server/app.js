@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const app = express();
 const http = require('http').createServer(app);
 const PORT = process.env.PORT || 3000;
+const io = require('socket.io')(http)
 const index = require('./routes/index.js');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -30,10 +31,22 @@ mongoose.connect(process.env.MONGO_URL,
   .catch(err => {
     console.log(err)
   })
+  
+io.on('connection', function(socket){
+
+  socket.on('send', function (data) {
+    io.emit('change-data', data)
+  })
+
+  
+})
 
 app.use('/',index);
+
 app.use(errorHandler);
 
 http.listen(PORT, function() {
   console.log(`Listening on PORT ${PORT}`)
 })
+
+module.exports = io

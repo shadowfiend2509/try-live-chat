@@ -5,11 +5,18 @@
 		<div class="chatApp__loader"></div>
 	</div>
   <div id='chatApp2'>
+    <button @click='outRoom (specRoom._id)'>Out Room</button>
     <div class="message">
-      <div class="card2">
-        <h3>Card Title</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque lacus ex, maxim.</p>
+      <h2> {{ specRoom.title }} </h2>
+      <div v-for='(msg, i) in specMessage' :key='i' class='loop'>
+        <RoomMsg :get-msg='msg'/>
       </div>
+    </div>
+    <div class="fott">
+      <form @submit.prevent='sendText(specRoom._id)'>
+        <input type='text' placeholder="your Message" v-model='message'>
+        <input type="submit" value='Send'>
+      </form>
     </div>
   </div>
 </section>
@@ -17,15 +24,60 @@
 
 <script>
 import axios from 'axios'
+import RoomMsg from '../components/RoomMsg'
+import io from 'socket.io-client'
 
 export default {
   data () {
     return {
       finish: false,
-      specRoom: ''
+      specRoom: '',
+      specMessage: '',
+      message: '',
+      socket: io.connect('http://localhost:3000')
     }
   },
+  components: {
+    RoomMsg,
+  },
   methods: {
+    sendText (id) {
+      const text = this.message;
+      axios({
+        method: 'post',
+        url: `http://localhost:3000/msg/post/${ id }`,
+        data: { text },
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
+        .then( ({data})  => {
+          this.socket.emit('send', data.msg)
+          data.msg = null
+          this.message = ''
+        })
+        .catch(err => {
+          this.$awn.warning(err.response.data.msg)
+        })
+    },
+    outRoom (id) {
+      axios({
+        method: 'put',
+        url: `http://localhost:3000/rooms/out/${id}`,
+        headers: {
+          token: localStorage.getItem('token')
+        }
+      })
+        .then(({data}) => {
+          this.$awn.success(data.msg)
+          setTimeout(() => {
+            this.$router.push('/')
+          }, 2000);
+        })
+        .catch(err => {
+          this.$awn.warning(err.response.data.msg)
+        })
+    },
     fetchInRoom () {
       const id = this.$route.params.id;
       axios({
@@ -36,8 +88,8 @@ export default {
         }
       })
         .then(({data}) => {
-          console.log(data)
           this.specRoom = data;
+          this.specMessage = data.MsgId.reverse()
           this.finish = true;
           this.$awn.success('Success in Room')
         })
@@ -47,21 +99,19 @@ export default {
     }
   },
   created () {
-    this.fetchInRoom()
+    this.fetchInRoom();
+    this.socket.on('change-data', (data) => {
+      this.specRoom.MsgId.unshift(data)
+      data = null
+    })
   }
 }
 </script>
 
 <style scoped>
-.card2{
-  background-color: #fff;
-  width: 50%;
-  margin: auto;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 8px 16px 0 rgba(0,0,0,.7);
+.loop{
+  margin-top: 10px;
 }
-
 .card2 h3{
   text-align: center;
 }
@@ -71,6 +121,7 @@ export default {
 }
 .message {
   height: 650px;
+  overflow: auto;
   background-color:aqua;
 }
 #chatApp2{

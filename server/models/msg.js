@@ -2,9 +2,9 @@ const Mongoose = require('mongoose');
 const Schema = Mongoose.Schema;
 
 const MsgSchema = new Schema({
-  UserId: {
-    type: Schema.Types.ObjectId,
-    ref: 'users'
+  username: {
+    type: String,
+    required: true
   },
   text: {
     type: String,

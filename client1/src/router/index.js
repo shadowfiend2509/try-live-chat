@@ -15,6 +15,11 @@ const routes = [
     path: '/room/:id',
     name: 'room',
     component: Room
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import(/* webpackChunkName: 'login' */ '../views/Login.vue')
   }
 ]
 

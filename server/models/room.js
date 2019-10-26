@@ -19,6 +19,10 @@ const RoomSchema = new Schema({
       ref: 'messages'
     }
   ],
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
   createdAt: String
 })
 

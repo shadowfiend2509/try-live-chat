@@ -2,26 +2,29 @@ const Msg = require('../models/msg');
 const Room = require('../models/room');
 const mongoose = require('mongoose');
 
+
 class MsgController {
   static createAMsg (req,res,next) {
     const { text } = req.body;
     const roomId = req.params.id;
-    const UserId = req.loggedUser.id;
-    if( text == undefined || UserId == undefined ) throw {msg: 'empty'}
+    let msge
+    const username = req.loggedUser.username;
+    if( text == undefined || username == undefined ) throw {msg: 'empty'}
     else {
-      Msg.create({ UserId, text })
+      Msg.create({ username, text })
         .then( (msg) => {
+          msge = msg
           const MsgId = new mongoose.Types.ObjectId(msg._id)
           return Room.findByIdAndUpdate({ _id: roomId },{ $push: { MsgId } })
         })
         .then( () => {
-          res.status(201).json({msg: 'msg success send!'});
+          res.status(201).json({ msg: msge });
         })
         .catch(next)
     }
   }
   static findthatMsg (req,res,next) {
-    const UserId = req.params.id;
+    const UserId = req.loggedUser.id;
     Msg.find({UserId}).populate('UserId')
       .then(msgs => {
         if(!msgs) throw {msg: 'zero'}

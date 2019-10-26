@@ -3,7 +3,7 @@ const MsgCont = require('../controllers/msgController.js');
 const { authentication } = require('../middlewares/auth');
 
 Route.get(
-  '/:id', // find msg by UserId
+  '/', 
   authentication, 
   MsgCont.findthatMsg
 );  //==> this is id User

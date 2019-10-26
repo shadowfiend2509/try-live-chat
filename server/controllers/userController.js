@@ -26,7 +26,7 @@ class UserController {
             email: tempUser.email
           }
           const serverToken = signToken(payload)
-          res.status(200).json({token: serverToken, msg: 'Online'})
+          res.status(200).json({token: serverToken, msg: 'Online', user: payload})
         })
         .catch(next)
     }
@@ -36,7 +36,7 @@ class UserController {
     const {username, email, password} = req.body;
     if(username == undefined || email == undefined || password == undefined) throw {msg: 'zero'}
     else {
-      User.create({email, password})
+      User.create({username, email, password})
         .then(user => {
           console.log(user)
           res.status(201).json({msg: 'Success Register!'})

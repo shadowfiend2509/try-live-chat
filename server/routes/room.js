@@ -20,6 +20,11 @@ Route.patch(
   authentication,
   RoomCont.joinRoom
 )
+Route.put(
+  '/out/:id',
+  authentication,
+  RoomCont.outRoom
+)
 
 Route.delete(
   '/:id', // next level delete room only admin
