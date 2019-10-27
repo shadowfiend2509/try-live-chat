@@ -9,12 +9,14 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    component: Home
-  },
-  {
-    path: '/room/:id',
-    name: 'room',
-    component: Room
+    component: Home,
+    children: [
+      {
+        path: 'room/:id',
+        name: 'room',
+        component: Room
+      }
+    ]
   },
   {
     path: '/login',

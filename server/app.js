@@ -38,7 +38,30 @@ io.on('connection', function(socket){
     io.emit('change-data', data)
   })
 
-  
+  socket.on('disconnect', function() {
+    console.log('disconnect!')
+    io.emit('roomout')
+  })
+
+  socket.on('reload', function () {
+    console.log('reload!!')
+    io.emit('reload');
+  })
+
+  socket.on('joinroom', function () {
+    console.log('joining!');
+    socket.broadcast.emit('joinroom');
+  })
+
+  socket.on('createroom', function () {
+    console.log('create room');
+    io.emit('createroom')
+  })
+
+  socket.on('deleteMsg', function () {
+    console.log('delete message')
+    io.emit('deleteMsg')
+  })
 })
 
 app.use('/',index);

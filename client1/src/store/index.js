@@ -10,13 +10,14 @@ export default new Vuex.Store({
   },
   mutations: {
     LOGIN_SUCCESS (state, payload) {
-      state.user = payload.user
       localStorage.setItem('token', payload.token)
+    },
+    CHECK_LOGIN (state, payload) {
+      state.user = payload
     }
   },
   actions: {
     loginAction ( context, payload ) {
-      console.log(payload)
       return new Promise ((resolve, reject) => {
         axios({
           method: 'post',
@@ -32,6 +33,21 @@ export default new Vuex.Store({
           })
           .catch(reject)
       })
+    },
+    checklogin (context, payload) {
+        axios({
+          method: 'get',
+          url: 'http://localhost:3000/',
+          headers: {
+            token: localStorage.getItem('token')
+          }
+        })
+          .then(({data}) => {
+            context.commit('CHECK_LOGIN', data)
+          })
+          .catch(err => {
+            console.log(err)
+          })
     }
   },
   modules: {

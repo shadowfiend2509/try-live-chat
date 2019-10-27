@@ -27,52 +27,7 @@
 	  </div>
 	</div>
 	<div class="mesgs">
-	  <div class="msg_history">
-		<div class="incoming_msg">
-		  <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
-		  <div class="received_msg">
-			<div class="received_withd_msg">
-			  <p>Test which is a new approach to have all
-				solutions</p>
-			  <span class="time_date"> 11:01 AM    |    June 9</span></div>
-		  </div>
-		</div>
-		<div class="outgoing_msg">
-		  <div class="sent_msg">
-			<p>Test which is a new approach to have all
-			  solutions</p>
-			<span class="time_date"> 11:01 AM    |    June 9</span> </div>
-		</div>
-		<div class="incoming_msg">
-		  <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
-		  <div class="received_msg">
-			<div class="received_withd_msg">
-			  <p>Test, which is a new approach to have</p>
-			  <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
-		  </div>
-		</div>
-		<div class="outgoing_msg">
-		  <div class="sent_msg">
-			<p>Apollo University, Delhi, India Test</p>
-			<span class="time_date"> 11:01 AM    |    Today</span> </div>
-		</div>
-		<div class="incoming_msg">
-		  <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
-		  <div class="received_msg">
-			<div class="received_withd_msg">
-			  <p>We work directly with our designers and suppliers,
-				and sell direct to you, which means quality, exclusive
-				products, at a price anyone can afford.</p>
-			  <span class="time_date"> 11:01 AM    |    Today</span></div>
-		  </div>
-		</div>
-	  </div>
-	  <div class="type_msg">
-		<div class="input_msg_write">
-		  <input type="text" class="write_msg" placeholder="Type a message" />
-		  <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
-		</div>
-	  </div>
+      <router-view @fetchRoom='okFetchingRoom'/>
 	</div>
   </div>
 </div>
@@ -81,36 +36,51 @@
 
 <script>
 import axios from 'axios';
+import io from 'socket.io-client';
+
 // @ is an alias to /src
 export default {
   name: 'home',
   data () {
     return {
       text: '',
-      getRooms: ''
+      getRooms: '',
+      socket: io.connect('http://localhost:3000'),
+      user: ''
     }
   },
   methods: {
+    okFetchingRoom () {
+      this.socket.emit('reload')
+    },
     createRoom () {
-      axios({
-        method: 'post',
-        url: 'http://localhost:3000/rooms',
-        data: {
-          title: this.text
-        },
-        headers: {
-          token: localStorage.getItem('token')
-        }
-      })
-        .then(({data}) => {
-          this.$awn.success(data.msg);
-          setTimeout(() => {
-            this.fetchingRoom()
-          }, 2000);
+      if(localStorage.getItem('token')){
+        axios({
+          method: 'post',
+          url: 'http://localhost:3000/rooms',
+          data: {
+            title: this.text
+          },
+          headers: {
+            token: localStorage.getItem('token')
+          }
         })
-        .catch(err => {
-          this.$awn.warning(err.response.data.msg);
-        })
+          .then(({data}) => {
+            this.$awn.success(data.msg);
+            setTimeout(() => {
+              this.fetchingRoom()
+              this.socket.emit('createroom')
+            }, 2000);
+          })
+          .catch(err => {
+            this.$awn.warning(err.response.data.msg);
+          })
+      } else {
+        this.$awn.info('Cant create Room, please Login First!');
+        setTimeout(() => {
+          this.$router.push('/login')
+        }, 2000);
+      }
     },
     joinRoom (id) {
       if(localStorage.getItem('token')) {
@@ -125,6 +95,7 @@ export default {
             this.$awn.success('Success join, 2 sec we will redirect to Room');
             setTimeout(() => {
               this.$router.push(`/room/${ id }`)
+              this.socket.emit('joinroom');
             }, 2000);
           })
           .catch(err => {
@@ -138,7 +109,6 @@ export default {
       }
     },
     fetchingRoom () {
-      this.$awn.success('Fetching Rooms!')
       axios({
         method: 'get',
         url: 'http://localhost:3000/rooms'
@@ -152,7 +122,19 @@ export default {
     }
   },
   created () {
-    this.fetchingRoom()
+    this.fetchingRoom();
+
+    this.socket.on('reload', () => {
+      this.fetchingRoom()
+    })
+
+    this.socket.on('joinroom', () => {
+      this.fetchingRoom()
+    })
+
+    this.socket.on('createroom', () => {
+      this.fetchingRoom()
+    })
   }
 }
 </script>
@@ -190,7 +172,6 @@ export default {
 	display: inline-block;
 	text-align: right;
 	width: 60%;
-	padding:
 }
 
 .headind_srch {
@@ -343,8 +324,8 @@ export default {
 }
 
 .sent_msg {
-	float: right;
-	width: 46%;
+  height: 100%;
+	width: 100%;
 }
 
 .input_msg_write input {

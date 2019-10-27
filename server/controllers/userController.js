@@ -1,10 +1,15 @@
 const User = require('../models/user');
 const { comparePassword } = require("../helpers/hash");
 const { signToken } = require('../helpers/jwt')
-const bcryptjs = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 class UserController {
+  static ceklogin (req,res,next) {
+    User.findById({ _id: req.loggedUser.id })
+      .then(user => {
+        res.status(200).json(user);
+      })
+      .catch(next)
+  }
   static login (req,res,next) {
     let tempUser
     const {email, password} = req.body;

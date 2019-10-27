@@ -1,25 +1,37 @@
 <template>
-  <section id="chatApp" class="chatApp">
-	<div class="chatApp__loaderWrapper" v-if='!finish'>
-		<div class="chatApp__loaderText">Loading...</div>
-		<div class="chatApp__loader"></div>
-	</div>
-  <div id='chatApp2'>
-    <button @click='outRoom (specRoom._id)'>Out Room</button>
-    <div class="message">
-      <h2> {{ specRoom.title }} </h2>
-      <div v-for='(msg, i) in specMessage' :key='i' class='loop'>
-        <RoomMsg :get-msg='msg'/>
+<div>
+  <div class="msg_history">
+    <div>
+      <button class='btn btn-info' @click='outRoom(specRoom._id)'>Out Room</button> {{getUser}}
+    </div>
+    <div class="chatApp__loaderWrapper" v-if='!finish'>
+      <div class="chatApp__loaderText">Loading...</div>
+      <div class="chatApp__loader"></div>
+    </div>
+    <div v-for='(msg, i) in specMessage' :key='i'>
+      <div class="outgoing_msg">
+        <div class="row">
+          <div class="col-4">
+            <span class="time_date"> {{ msg.createdAt.split(', ')[1] }}    |    {{ msg.createdAt.split(', ')[0] }}  |  {{ msg.username }} <button class='btn btn-info btn-sm' @click='deleteMsg(msg._id)'>delete</button></span> 
+          </div>
+          <div class="col-8">
+            <div class="sent_msg">
+            <a>{{ msg.text }}</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="fott">
+  </div>
+  <div class="type_msg">
+    <div class="input_msg_write">
       <form @submit.prevent='sendText(specRoom._id)'>
-        <input type='text' placeholder="your Message" v-model='message'>
-        <input type="submit" value='Send'>
+        <input type="text" class="write_msg" placeholder="Type a message" v-model='message'/>
+        <button class="msg_send_btn" type="submit"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
       </form>
     </div>
   </div>
-</section>
+</div>
 </template>
 
 <script>
@@ -34,6 +46,7 @@ export default {
       specRoom: '',
       specMessage: '',
       message: '',
+      getUser: null,
       socket: io.connect('http://localhost:3000')
     }
   },
@@ -42,7 +55,7 @@ export default {
   },
   methods: {
     sendText (id) {
-      const text = this.message;
+      const text = this.message
       axios({
         method: 'post',
         url: `http://localhost:3000/msg/post/${ id }`,
@@ -54,7 +67,7 @@ export default {
         .then( ({data})  => {
           this.socket.emit('send', data.msg)
           data.msg = null
-          this.message = ''
+          this.message = '';
         })
         .catch(err => {
           this.$awn.warning(err.response.data.msg)
@@ -72,6 +85,7 @@ export default {
           this.$awn.success(data.msg)
           setTimeout(() => {
             this.$router.push('/')
+            this.$emit('fetchRoom');
           }, 2000);
         })
         .catch(err => {
@@ -91,18 +105,41 @@ export default {
           this.specRoom = data;
           this.specMessage = data.MsgId.reverse()
           this.finish = true;
-          this.$awn.success('Success in Room')
         })
         .catch(err => {
           this.$awn.warning(err.response.data.msg);
+        })
+    },
+    deleteMsg (id) {
+      axios({
+        method: 'delete',
+        url: `http://localhost:3000/msg/${ id }`,
+        headers: {
+          token: localStorage.getItem('token')
+        },
+        data: {
+          id : this.specRoom._id
+        }
+      })
+        .then( ({data}) => {
+          this.$awn.success(data.msg)
+          this.socket.emit('deleteMsg')
+        })
+        .catch(err => {
+          this.$awn.warning(err.response.data.msg)
         })
     }
   },
   created () {
     this.fetchInRoom();
+    this.getUser = this.$store.state.user.username
     this.socket.on('change-data', (data) => {
       this.specRoom.MsgId.unshift(data)
       data = null
+    })
+
+    this.socket.on('deleteMsg', () => {
+      this.fetchInRoom()
     })
   }
 }

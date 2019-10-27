@@ -54,7 +54,6 @@ export default {
       const payload = { email: this.email, password: this.password }
       this.$store.dispatch('loginAction', payload)
         .then(data => {
-          console.log(data);
           this.$awn.success(data.msg);
           setTimeout(() => {
             this.$router.push('/')
@@ -77,7 +76,6 @@ export default {
 }
 
 body {
-  background: #2c3338;
   color: #606468;
   font: 87.5%/1.5em 'Open Sans', sans-serif;
   margin: 0;

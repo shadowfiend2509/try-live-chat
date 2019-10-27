@@ -32,11 +32,19 @@ class RoomController {
   static joinRoom (req,res,next) {
     const _id = req.params.id;
     const UserId = new mongoose.Types.ObjectId(req.loggedUser.id);
-    Room.findByIdAndUpdate({ _id },{ $push: { UserId }})
-      .then( (r) => {
-        if(!r) throw {msg: 'zero'}
-        else {
-          res.status(200).json({ msg: 'success joining Room' })
+    Room.findOne({ _id })
+      .then( rooms => {
+        console.log(rooms)
+        let pass = true;
+        rooms.UserId.forEach((el, i) => {
+          if(el == req.loggedUser.id) pass = false;
+        })
+        if(!pass) res.status(200).json({ msg: 'success joining Room'});
+        else if (pass) {
+          Room.findByIdAndUpdate({ _id }, {$push: { UserId }})
+          .then( (r) => {
+            res.status(200).json({ msg: 'success joining Room' })
+          })
         }
       })
       .catch(next)
@@ -51,7 +59,6 @@ class RoomController {
             room.UserId.splice(i,1)
           }
         }
-        console.log(room)
         return Room.findByIdAndUpdate({ _id }, { UserId: room.UserId })
       })
       .then( () => {
